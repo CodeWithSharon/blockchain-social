@@ -125,46 +125,31 @@ describe("PostRegistry", function () {
     beforeEach(async function () {
       const contentHash = ethers.keccak256(ethers.toUtf8Bytes("test"));
 
-      // user1 creates the post to be voted on
       await postRegistry.connect(user1).createPost("QmHash1", contentHash);
 
-      // Give user2 a large balance (3 CLINK) — they will vote false (keep)
-      // so hide votes cannot win with just user2 alone
-      // user2 creates post, liked by user1 x3 via 3 separate posts
       await postRegistry.connect(user2).createPost("QmHash2", contentHash);
-      await postRegistry.connect(user3).likePost(2); // user2 gets 1 CLINK
+      await postRegistry.connect(user3).likePost(2);
 
       await postRegistry.connect(user2).createPost("QmHash3", contentHash);
-      await postRegistry.connect(user3).likePost(3); // user2 gets 2nd CLINK
+      await postRegistry.connect(user3).likePost(3);
 
       await postRegistry.connect(user2).createPost("QmHash4", contentHash);
-      await postRegistry.connect(user3).likePost(4); // user2 gets 3rd CLINK
+      await postRegistry.connect(user3).likePost(4);
 
-      // Give user3 1 CLINK
       await postRegistry.connect(user3).createPost("QmHash5", contentHash);
-      await postRegistry.connect(user2).likePost(5); // user3 gets 1 CLINK
+      await postRegistry.connect(user2).likePost(5);
 
-      // user2 = 3 CLINK, user3 = 1 CLINK → total = 4 CLINK
-      // user3 votes hide: 1/1 = 100% — still too early
-      // BUT user2 votes first (false/keep): totalWeight=3, hideVotes=0 → 0%
-      // Then user3 votes hide: totalWeight=4, hideVotes=1 → 25% < 51% → not hidden
-      // For "hide" test: need user3(1) + someone else to exceed 51% of total(4)
-      // user3(1) + user2(3) voting hide = 4/4 = 100% > 51% → hidden
-
-      // Flag post 1 three times to trigger community review
       await postRegistry.connect(user2).flagPost(1);
       await postRegistry.connect(user3).flagPost(1);
       await postRegistry.connect(owner).flagPost(1);
     });
 
-    // user2 votes first with false (keep) → hideVotes=0, total=3 → 0% → not hidden
     it("should allow token holder to vote", async function () {
       await postRegistry.connect(user2).vote(1, false);
       const post = await postRegistry.getPost(1);
       expect(post.isHidden).to.equal(false);
     });
 
-    // user2 votes hide (3 CLINK) → 3/3=100% → hidden immediately
     it("should hide post when hide votes exceed 51 percent", async function () {
       await postRegistry.connect(user2).vote(1, true);
       const post = await postRegistry.getPost(1);
@@ -243,6 +228,141 @@ describe("PostRegistry", function () {
       await postRegistry.connect(user2).createPost("QmHash2", contentHash);
       const posts = await postRegistry.getAllPosts();
       expect(posts.length).to.equal(2);
+    });
+  });
+
+  describe("Delete Post", function () {
+    beforeEach(async function () {
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("test"));
+      await postRegistry.connect(user1).createPost("QmHash1", contentHash);
+    });
+
+    it("should delete post by hiding it", async function () {
+      await postRegistry.connect(user1).deletePost(1);
+      const post = await postRegistry.getPost(1);
+      expect(post.isHidden).to.equal(true);
+    });
+
+    it("should not allow non-author to delete", async function () {
+      await expect(
+        postRegistry.connect(user2).deletePost(1)
+      ).to.be.revertedWith("Only author can delete");
+    });
+
+    it("should not delete non-existent post", async function () {
+      await expect(
+        postRegistry.connect(user1).deletePost(99)
+      ).to.be.revertedWith("Post does not exist");
+    });
+  });
+
+  describe("Repost", function () {
+    beforeEach(async function () {
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("test"));
+      await postRegistry.connect(user1).createPost("QmHash1", contentHash);
+    });
+
+    it("should repost successfully", async function () {
+      await postRegistry.connect(user2).repost(1);
+      expect(await postRegistry.getTotalPosts()).to.equal(2);
+    });
+
+    it("should track original author on repost", async function () {
+      await postRegistry.connect(user2).repost(1);
+      expect(await postRegistry.getOriginalAuthor(2)).to.equal(user1.address);
+    });
+
+    it("should increment repost count", async function () {
+      await postRegistry.connect(user2).repost(1);
+      expect(await postRegistry.getRepostCount(1)).to.equal(1);
+    });
+
+    it("should identify post as repost", async function () {
+      await postRegistry.connect(user2).repost(1);
+      expect(await postRegistry.isRepost(2)).to.equal(true);
+    });
+
+    it("should mint token to original author on repost", async function () {
+      await postRegistry.connect(user2).repost(1);
+      expect(await contentToken.balanceOf(user1.address)).to.equal(ethers.parseEther("1"));
+    });
+
+    it("should not repost your own post", async function () {
+      await expect(
+        postRegistry.connect(user1).repost(1)
+      ).to.be.revertedWith("Cannot repost your own post");
+    });
+
+    it("should not repost hidden post", async function () {
+      await postRegistry.connect(user1).deletePost(1);
+      await expect(
+        postRegistry.connect(user2).repost(1)
+      ).to.be.revertedWith("Post is hidden");
+    });
+  });
+
+  describe("Comments", function () {
+    beforeEach(async function () {
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("test"));
+      await postRegistry.connect(user1).createPost("QmHash1", contentHash);
+    });
+
+    it("should add a comment successfully", async function () {
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("comment"));
+      await postRegistry.connect(user2).addComment(1, "QmCommentHash", contentHash);
+      const comment = await postRegistry.getComment(1);
+      expect(comment.author).to.equal(user2.address);
+      expect(comment.postId).to.equal(1);
+      expect(comment.exists).to.equal(true);
+    });
+
+    it("should increment comment count", async function () {
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("comment"));
+      await postRegistry.connect(user2).addComment(1, "QmCommentHash1", contentHash);
+      await postRegistry.connect(user3).addComment(1, "QmCommentHash2", contentHash);
+      expect(await postRegistry.getCommentCount(1)).to.equal(2);
+    });
+
+    it("should return all comments for a post", async function () {
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("comment"));
+      await postRegistry.connect(user2).addComment(1, "QmCommentHash1", contentHash);
+      await postRegistry.connect(user3).addComment(1, "QmCommentHash2", contentHash);
+      const comments = await postRegistry.getPostComments(1);
+      expect(comments.length).to.equal(2);
+    });
+
+    it("should not comment on hidden post", async function () {
+      await postRegistry.connect(user1).deletePost(1);
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("comment"));
+      await expect(
+        postRegistry.connect(user2).addComment(1, "QmCommentHash", contentHash)
+      ).to.be.revertedWith("Post is hidden");
+    });
+
+    it("should like a comment and mint token to comment author", async function () {
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("comment"));
+      await postRegistry.connect(user2).addComment(1, "QmCommentHash", contentHash);
+      await postRegistry.connect(user3).likeComment(1);
+      const comment = await postRegistry.getComment(1);
+      expect(comment.likeCount).to.equal(1);
+      expect(await contentToken.balanceOf(user2.address)).to.equal(ethers.parseEther("1"));
+    });
+
+    it("should not like your own comment", async function () {
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("comment"));
+      await postRegistry.connect(user2).addComment(1, "QmCommentHash", contentHash);
+      await expect(
+        postRegistry.connect(user2).likeComment(1)
+      ).to.be.revertedWith("Cannot like your own comment");
+    });
+
+    it("should not like same comment twice", async function () {
+      const contentHash = ethers.keccak256(ethers.toUtf8Bytes("comment"));
+      await postRegistry.connect(user2).addComment(1, "QmCommentHash", contentHash);
+      await postRegistry.connect(user3).likeComment(1);
+      await expect(
+        postRegistry.connect(user3).likeComment(1)
+      ).to.be.revertedWith("Already liked");
     });
   });
 });

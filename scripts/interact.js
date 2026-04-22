@@ -35,9 +35,13 @@ async function main() {
 
   // 2. Register a user
   console.log("\n--- Registering User ---");
-  const tx1 = await userRegistry.connect(user1).registerUser("alice", "QmAvatarHash123");
-  await tx1.wait();
-  console.log("User registered: alice");
+  try {
+    const tx1 = await userRegistry.connect(user1).registerUser("alice", "QmAvatarHash123");
+    await tx1.wait();
+    console.log("User registered: alice");
+  } catch (e) {
+    console.log("User already registered — skipping");
+  }
 
   // 3. Get user info
   const user = await userRegistry.getUser(user1.address);
@@ -52,15 +56,15 @@ async function main() {
   await tx2.wait();
   console.log("Post created!");
 
-  // 5. Get post info
-  const post = await postRegistry.getPost(1);
+  // 5. Get total posts and fetch latest
+  const totalPosts = await postRegistry.getTotalPosts();
+  const post = await postRegistry.getPost(totalPosts);
   console.log("Post ID:", post.id.toString());
   console.log("Author:", post.author);
   console.log("IPFS Hash:", post.ipfsHash);
   console.log("Like Count:", post.likeCount.toString());
 
   // 6. Check total posts
-  const totalPosts = await postRegistry.getTotalPosts();
   console.log("\nTotal Posts:", totalPosts.toString());
 
   // 7. Check total users

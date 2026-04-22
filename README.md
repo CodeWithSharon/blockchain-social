@@ -1,76 +1,148 @@
-# Decentralized Social Media Platform
+🚀 Decentralized Social Media Platform — Chain.Social
 
-A blockchain-based social media platform where users own their content, earn tokens for engagement, and community governs content moderation — with no central authority.
+A blockchain-based social media platform where users own their content, earn tokens for engagement, and participate in community-driven moderation — all without a central authority.
 
-## Tech Stack
+🌐 Overview
 
-- **Solidity** — Smart contracts
-- **Hardhat** — Development and testing framework
-- **Ethereum Sepolia Testnet** — Blockchain network
-- **OpenZeppelin** — ERC-20 token standard
-- **ethers.js** — Blockchain interaction
-- **IPFS via Pinata** — Decentralized content storage
+Chain.Social is built on the Ethereum Sepolia and uses IPFS (via Pinata) for decentralized storage.
 
----
+Instead of traditional login systems, users authenticate using MetaMask, making their wallet address their identity.
 
-## Smart Contracts
+All interactions — posts, likes, comments, tips — are handled through smart contracts, ensuring transparency, immutability, and trust.
 
-### ContentToken.sol
-ERC-20 token named CLINK. Minted automatically when a post gets liked. Used as voting power in community moderation.
+🛠️ Tech Stack
+Solidity — Smart contracts
+Hardhat — Development & testing framework
+Ethereum Sepolia — Blockchain network
+OpenZeppelin — ERC-20 token standard
+ethers.js — Blockchain interaction
+IPFS + Pinata — Storage
+Node.js + Express — Backend API
+React.js — Frontend UI
+Infura — RPC provider
+📜 Smart Contracts
+🔹 ContentToken.sol
+ERC-20 token (CLINK)
+Minted when posts receive likes
+Used as voting power in moderation
+🔹 UserRegistry.sol
+Wallet-based identity system
+Profile management (username, avatar, visibility)
+Follow/unfollow system
+Verified badge support
+🔹 PostRegistry.sol
+Create and manage posts
+Like, comment, repost
+Flagging and community moderation
+ETH tipping system
+Tamper detection using content hashing
+📍 Deployed Contracts (Sepolia Testnet)
+Contract	Address
+ContentToken	0x92202484DA49D39f95bB5428a8d2faD11f7eA6eb
+UserRegistry	0xb1A400B0f6FA06c25eA8fC9d06756DD1e682cd92
+PostRegistry	0xF25e322879B0ECdA94b1A0F072DEcf792D89CaD9
+🔎 Contract Verification
 
-### UserRegistry.sol
-Manages user identity on-chain. Users register with their wallet address as their ID. Supports profile management, visibility controls, verified badges, and a follow system.
+View contracts on Etherscan:
 
-### PostRegistry.sol
-Core contract handling all post interactions — creating posts, liking, flagging, community voting, tipping, commenting, reposting, and tamper detection.
+ContentToken: https://sepolia.etherscan.io/address/0x92202484DA49D39f95bB5428a8d2faD11f7eA6eb#code
+UserRegistry: https://sepolia.etherscan.io/address/0xb1A400B0f6FA06c25eA8fC9d06756DD1e682cd92#code
+PostRegistry: https://sepolia.etherscan.io/address/0xF25e322879B0ECdA94b1A0F072DEcf792D89CaD9#code
+✨ Features Implemented
+🔹 Core Features
+🔐 Wallet-based login (no username/password)
+👤 User profiles (create, update, delete, visibility toggle)
+📝 Create posts (stored on IPFS, hash on blockchain)
+❤️ Like posts → earn CLINK tokens
+🔗 Ownership proof via cryptographic hashing
+🛡️ Tamper detection (hash verification)
+💸 ETH tipping (peer-to-peer payments)
+🚩 Flagging system for harmful content
+🗳️ Token-weighted community moderation
+❌ Post hiding (due to blockchain immutability)
+🔁 Repost system with rewards
+💬 Comment system with token incentives
+🔹 Enhancement Features
+➕ Follow / Unfollow users
+✔️ Verified badge
+🔒 Profile visibility (public/private)
+🏆 Token leaderboard (Top CLINK holders)
+📂 Project Structure
+project-root/
+│
+├── contracts/
+│   ├── ContentToken.sol
+│   ├── UserRegistry.sol
+│   └── PostRegistry.sol
+│
+├── scripts/
+│   ├── deploy.js
+│   └── interact.js
+│
+├── test/
+│   ├── ContentToken.test.js
+│   ├── UserRegistry.test.js
+│   └── PostRegistry.test.js
+│
+├── backend/
+│   ├── server.js
+│   ├── routes/
+│   └── ipfs.js
+│
+├── frontend/
+│   ├── src/
+│   ├── App.js
+│   └── services/
+│       ├── ContractServices.js
+│       └── contracts.js
+⚙️ Project Setup
+✅ Prerequisites
+Node.js (v18+)
+MetaMask
+Sepolia test ETH (from faucet)
+📥 Installation
+git clone https://github.com/your-username/chain-social.git
+cd chain-social
+npm install
+🔨 Compile Contracts
+npx hardhat compile
+🚀 Deploy Contracts
+npx hardhat run scripts/deploy.js --network sepolia
+🧪 Run Tests
+npx hardhat test
 
----
+✅ All tests passed: 68/68
 
-## Deployed Contracts (Sepolia Testnet)
+▶️ Run Backend
+cd backend
+npm install
+node server.js
+💻 Run Frontend
+cd frontend
+npm install
+npm start
+🔐 Key Design Decisions
+IPFS + Hash Storage → Reduces gas costs while ensuring integrity
+Wallet Authentication → Eliminates password vulnerabilities
+Token-Based Governance → Encourages quality contributions
+Immutable Data Handling → Uses “hide” instead of delete
+Hybrid Architecture → Combines decentralization with performance
+📸 Screenshots
 
-| Contract | Address |
-|---|---|
-| ContentToken | `0x92202484DA49D39f95bB5428a8d2faD11f7eA6eb` |
-| UserRegistry | `0xb1A400B0f6FA06c25eA8fC9d06756DD1e682cd92` |
-| PostRegistry | `0xF25e322879B0ECdA94b1A0F072DEcf792D89CaD9` |
+(Add your screenshots here)
 
-### Etherscan Links
-- [ContentToken](https://sepolia.etherscan.io/address/0x92202484DA49D39f95bB5428a8d2faD11f7eA6eb#code)
-- [UserRegistry](https://sepolia.etherscan.io/address/0xb1A400B0f6FA06c25eA8fC9d06756DD1e682cd92#code)
-- [PostRegistry](https://sepolia.etherscan.io/address/0xF25e322879B0ECdA94b1A0F072DEcf792D89CaD9#code)
+Create Post
+Like Post
+Comment
+Repost
+Tip Author
+Leaderboard
+Etherscan Proof
+IPFS Output
+📌 Conclusion
 
----
+Chain.Social demonstrates how blockchain and decentralized technologies can be used to build a secure, transparent, and user-owned social media platform. It eliminates reliance on centralized control while ensuring trust, data ownership, and fair participation.
 
-## Features Implemented
-
-### Core Features
-- Wallet-based login — no username or password
-- User profile — register, update, delete, toggle visibility
-- Create posts — content stored on IPFS, hash stored on Ethereum
-- Like posts — author earns 1 CLINK token per like
-- Ownership proof — every post cryptographically tied to author wallet
-- Tamper detection — content hash verified on-chain
-- Tip system — send ETH directly to post author peer to peer
-- Flag system — 3 flags puts post under community review
-- Community voting — token-weighted, 51% hide votes hides post
-- Delete post — author can hide their own post
-- Repost — share another user's post, original author earns tokens
-- Comments — comment on posts, earn tokens when comments are liked
-
-### Enhancement Features
-- Follow system — follow and unfollow any wallet address
-- Verified badge — users can set verified status on-chain
-- Profile visibility — public or private toggle
-
----
-
-## Project Setup
-
-### Prerequisites
-- Node.js v18+
-- MetaMask browser extension
-- Sepolia test ETH
-
-### Installation
-
-```bash
+👩‍💻 Authors
+Sharon A — Blockchain & Smart Contracts
+Shreela Sukumar Shetty — Full Stack & Integration
